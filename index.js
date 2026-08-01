@@ -1,4 +1,3 @@
-```js
 // index.js
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
 require('dotenv').config();
@@ -67,7 +66,6 @@ client.on('messageCreate', async (message) => {
     const args = content.split(/\s+/);
     const command = args[0];
 
-    // ====== !help2 ======
     if (command === '!help2') {
       return message.reply(`
 ⚙️ الاعدادات
@@ -109,7 +107,6 @@ client.on('messageCreate', async (message) => {
       `);
     }
 
-    // ====== !panel ======
     if (command === '!panel') {
       const id = args[1];
       if (panels[id]) {
@@ -119,7 +116,6 @@ client.on('messageCreate', async (message) => {
       }
     }
 
-    // ====== نقاط النظام ======
     if (command === '!points') {
       const userPoints = points[message.author.id] || 0;
       return message.reply(`⭐ نقاطك الحالية: ${userPoints}`);
@@ -147,12 +143,10 @@ client.on('messageCreate', async (message) => {
       }
     }
 
-    // ====== !zshop ======
     if (command === '!zshop') {
       return message.reply("🛒 شوب Zyro بيتفتح لما تكتب الأمر !help2 في البوت المخصص له.");
     }
 
-    // ====== DM منسق - !dm ======
     if (command === '!dm') {
       const user = message.mentions.users.first();
       const msg = args.slice(2).join(' ');
@@ -173,7 +167,6 @@ ${msg}
       }
     }
 
-    // ====== DM عام - !dms ======
     if (command === '!dms') {
       const msg = args.slice(1).join(' ');
       if (!msg) return message.reply('⚠️ اكتب الرسالة بعد الأمر.');
@@ -194,7 +187,6 @@ ${msg}
       return message.reply(`✅ تم محاولة إرسال الرسالة إلى ${sentCount} عضو (بعض الرسائل قد تفشل إذا كان الخاص مغلق).`);
     }
 
-    // ====== ترحيب - !welcome ======
     if (command === '!welcome') {
       const user = message.mentions.users.first();
       if (user) {
@@ -204,7 +196,6 @@ ${msg}
       }
     }
 
-    // ====== إحصائيات - !stats ======
     if (command === '!stats') {
       if (!message.guild) return message.reply('⚠️ هذا الأمر يعمل داخل السيرفر فقط.');
       const totalMembers = message.guild.memberCount;
@@ -212,21 +203,17 @@ ${msg}
       return message.reply(`📊 عدد الأعضاء: ${totalMembers}\n🟢 الأونلاين: ${onlineMembers}`);
     }
 
-    // ====== لعبة النرد - !roll ======
     if (command === '!roll') {
       const number = Math.floor(Math.random() * 6) + 1;
       return message.reply(`🎲 طلعتلك ${number}`);
     }
 
-    // ====== الوقت - !time ======
     if (command === '!time') {
       const now = new Date();
       return message.reply(`🕒 الوقت الحالي: ${now.toLocaleString('ar-EG')}`);
     }
 
-    // ====== فتح تذكرة جديدة مع أسئلة - !newticket ======
     if (command === '!newticket') {
-      // إرسال DM للعضو مع الأسئلة
       const dmText = `🎫 **تم فتح تذكرة جديدة**  
 ━━━━━━━━━━━━━━━━━━  
 👤 العضو: ${getDisplayName(message.author)}  
@@ -240,7 +227,6 @@ ${msg}
 ✍️ اكتب إجاباتك هنا في الخاص، وبعد الانتهاء اكتب "تم" أو "end" لإرسال الإجابات فورًا.  
 ━━━━━━━━━━━━━━━━━━`;
 
-      // حاول تبعت DM أولاً
       try {
         await message.author.send(dmText);
         await message.reply('✅ تم فتح تذكرتك في الخاص، من فضلك جاوب على الأسئلة هناك ثم اكتب "تم" أو "end" عند الانتهاء.');
@@ -249,7 +235,6 @@ ${msg}
         await message.reply("⚠️ لم أستطع إرسال رسالة خاصة لك. افتح الخاص أو تواصل مع الإدارة.");
       }
 
-      // إشعار للقناة بالـ ID المحدد
       try {
         const complaintsChannel = await client.channels.fetch(complaintsChannelId).catch(() => null);
 
@@ -265,7 +250,6 @@ ${msg}
           return;
         }
 
-        // إرسال إشعار التذكرة
         await complaintsChannel.send(`📢 **تذكرة جديدة**  
 ━━━━━━━━━━━━━━━━━━  
 👤 العضو: ${getDisplayName(message.author)}  
@@ -280,13 +264,10 @@ ${msg}
       return;
     }
 
-    // ====== إنهاء التذكرة فورًا عند كتابة "تم" أو "end" في الخاص ======
     const lower = content.toLowerCase();
     if (!message.guild && (lower === 'تم' || lower === 'end')) {
       try {
-        // جلب آخر الرسائل من قناة الـ DM (الرسائل في DM channel)
         const fetched = await message.channel.messages.fetch({ limit: 100 });
-        // فلترة رسائل العضو (اللي هي إجابات الاستمارة) واستبعاد أوامر "تم"/"end" ورسائل البوت
         const userMessages = fetched
           .filter(m => m.author.id === message.author.id && m.content && !['تم', 'end'].includes(m.content.trim().toLowerCase()))
           .sort((a, b) => a.createdTimestamp - b.createdTimestamp);
@@ -295,11 +276,9 @@ ${msg}
         if (userMessages.size === 0) {
           answersText = 'لا توجد إجابات نصية في الخاص.';
         } else {
-          // ترقيم بسيط من 1,2,3
           answersText = userMessages.map((m, i) => `${i + 1}. ${m.content}`).join('\n');
         }
 
-        // إرسال الإجابات للقناة المطلوبة
         const complaintsChannel = await client.channels.fetch(complaintsChannelId).catch(() => null);
 
         if (complaintsChannel && typeof complaintsChannel.send === 'function') {
@@ -333,4 +312,3 @@ client.once('ready', () => {
 });
 
 client.login(process.env.TOKEN);
-```

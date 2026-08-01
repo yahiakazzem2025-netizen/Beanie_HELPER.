@@ -56,7 +56,6 @@ client.on('messageCreate', async (message) => {
 !idhigh ID → إضافة رتبة High Staff
 !idticket ID → تحديد كاتيجوري التذاكر
 !idrating ID → تحديد روم التقييم
-!zshop → يوضح طريقة فتح شوب Zyro
 
 ❎ اللوحات
 !panel 1 → بانل التذاكر
@@ -66,6 +65,9 @@ client.on('messageCreate', async (message) => {
 !points → عرض نقاطك
 +point @user 10 → إضافة نقاط
 -point @user 10 → خصم نقاط
+
+🛒 الشوب
+!zshop → فتح شوب Zyro
 
 💌 الرسائل
 !dm @user الرسالة → إرسال رسالة خاصة

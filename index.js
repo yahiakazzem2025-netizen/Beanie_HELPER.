@@ -213,6 +213,7 @@ ${msg}
       return message.reply(`🕒 الوقت الحالي: ${now.toLocaleString('ar-EG')}`);
     }
 
+    // فتح تذكرة جديدة
     if (command === '!newticket') {
       const dmText = `🎫 **تم فتح تذكرة جديدة**  
 ━━━━━━━━━━━━━━━━━━  
@@ -264,6 +265,7 @@ ${msg}
       return;
     }
 
+    // إنهاء التذكرة فورًا عند كتابة "تم" أو "end" في الخاص — **ترقيم بسيط 1,2,3**
     const lower = content.toLowerCase();
     if (!message.guild && (lower === 'تم' || lower === 'end')) {
       try {
@@ -276,6 +278,7 @@ ${msg}
         if (userMessages.size === 0) {
           answersText = 'لا توجد إجابات نصية في الخاص.';
         } else {
+          // **ترقيم بسيط وآمن**: 1. 2. 3.
           answersText = userMessages.map((m, i) => `${i + 1}. ${m.content}`).join('\n');
         }
 
@@ -306,7 +309,7 @@ ${answersText}
   }
 });
 
-// ====== تشغيل البوت ======
+// تشغيل البوت
 client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });

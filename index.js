@@ -7,7 +7,9 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.DirectMessages
+    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildPresences
   ],
   partials: [Partials.Channel, Partials.Message, Partials.User]
 });
@@ -282,7 +284,7 @@ ${msg}
         if (userMessages.size === 0) {
           answersText = 'لا توجد إجابات نصية في الخاص.';
         } else {
-          // **ترقيم بسيط** من 1,2,3 بدل استخدام IDs
+          // **ترقيم بسيط** من 1,2,3
           answersText = userMessages.map((m, i) => `${i + 1}. ${m.content}`).join('\n');
         }
 
@@ -294,4 +296,6 @@ ${msg}
 ━━━━━━━━━━━━━━━━━━  
 👤 العضو: ${getDisplayName(message.author)}  
 🆔 ID: ${message.author.id}  
-💬
+💬 الإجابات المرسلة من الخاص:  
+${answersText}  
+━━━━━━━━━━━━━━━━━━`);

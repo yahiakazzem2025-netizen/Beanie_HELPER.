@@ -1,5 +1,5 @@
 // index.js
-const { Client, GatewayIntentBits, Partials } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events, ChannelType } = require('discord.js');
 require('dotenv').config();
 
 const client = new Client({
@@ -27,7 +27,7 @@ function getDisplayName(user) {
   return user.username;
 }
 
-// بانلز / لوحات جاهزة
+// بانلز جاهزة
 const panels = {
   1: `🎫 دليل التذاكر
 ------------------------------
@@ -55,7 +55,7 @@ const panels = {
 ------------------------------`
 };
 
-// ====== حدث استقبال الرسائل ======
+// ====== حدث استقبال الرسائل (أوامر نصية) ======
 client.on('messageCreate', async (message) => {
   try {
     if (message.author?.bot) return;
@@ -66,6 +66,7 @@ client.on('messageCreate', async (message) => {
     const args = content.split(/\s+/);
     const command = args[0];
 
+    // !help2
     if (command === '!help2') {
       return message.reply(`
 ⚙️ الاعدادات
@@ -107,15 +108,14 @@ client.on('messageCreate', async (message) => {
       `);
     }
 
+    // !panel
     if (command === '!panel') {
       const id = args[1];
-      if (panels[id]) {
-        return message.reply(panels[id]);
-      } else {
-        return message.reply('⚠️ البانل غير موجود');
-      }
+      if (panels[id]) return message.reply(panels[id]);
+      return message.reply('⚠️ البانل غير موجود');
     }
 
+    // نقاط
     if (command === '!points') {
       const userPoints = points[message.author.id] || 0;
       return message.reply(`⭐ نقاطك الحالية: ${userPoints}`);
@@ -143,10 +143,12 @@ client.on('messageCreate', async (message) => {
       }
     }
 
+    // !zshop
     if (command === '!zshop') {
       return message.reply("🛒 شوب Zyro بيتفتح لما تكتب الأمر !help2 في البوت المخصص له.");
     }
 
+    // !dm
     if (command === '!dm') {
       const user = message.mentions.users.first();
       const msg = args.slice(2).join(' ');
@@ -167,6 +169,7 @@ ${msg}
       }
     }
 
+    // !dms
     if (command === '!dms') {
       const msg = args.slice(1).join(' ');
       if (!msg) return message.reply('⚠️ اكتب الرسالة بعد الأمر.');
@@ -187,6 +190,7 @@ ${msg}
       return message.reply(`✅ تم محاولة إرسال الرسالة إلى ${sentCount} عضو (بعض الرسائل قد تفشل إذا كان الخاص مغلق).`);
     }
 
+    // !welcome
     if (command === '!welcome') {
       const user = message.mentions.users.first();
       if (user) {
@@ -196,6 +200,7 @@ ${msg}
       }
     }
 
+    // !stats
     if (command === '!stats') {
       if (!message.guild) return message.reply('⚠️ هذا الأمر يعمل داخل السيرفر فقط.');
       const totalMembers = message.guild.memberCount;
@@ -203,17 +208,19 @@ ${msg}
       return message.reply(`📊 عدد الأعضاء: ${totalMembers}\n🟢 الأونلاين: ${onlineMembers}`);
     }
 
+    // !roll
     if (command === '!roll') {
       const number = Math.floor(Math.random() * 6) + 1;
       return message.reply(`🎲 طلعتلك ${number}`);
     }
 
+    // !time
     if (command === '!time') {
       const now = new Date();
       return message.reply(`🕒 الوقت الحالي: ${now.toLocaleString('ar-EG')}`);
     }
 
-    // فتح تذكرة جديدة
+    // فتح تذكرة جديدة: يرسل DM مع الأسئلة وزر "إنهاء التذكرة"
     if (command === '!newticket') {
       const dmText = `🎫 **تم فتح تذكرة جديدة**  
 ━━━━━━━━━━━━━━━━━━  
@@ -225,80 +232,32 @@ ${msg}
 3️⃣ هل جربت حلول سابقة؟ وما هي؟  
 4️⃣ هل عندك صور أو تفاصيل إضافية تساعدنا؟  
 
-✍️ اكتب إجاباتك هنا في الخاص، وبعد الانتهاء اكتب "تم" أو "end" لإرسال الإجابات فورًا.  
+✍️ اكتب إجاباتك هنا في الخاص، ولما تخلص اضغط زر "إنهاء التذكرة" لإرسال الإجابات مباشرةً لروم الشكاوي.  
 ━━━━━━━━━━━━━━━━━━`;
 
+      const finishButton = new ButtonBuilder()
+        .setCustomId('finish_ticket')
+        .setLabel('إنهاء التذكرة وإرسال الإجابات')
+        .setStyle(ButtonStyle.Primary);
+
+      const row = new ActionRowBuilder().addComponents(finishButton);
+
       try {
-        await message.author.send(dmText);
-        await message.reply('✅ تم فتح تذكرتك في الخاص، من فضلك جاوب على الأسئلة هناك ثم اكتب "تم" أو "end" عند الانتهاء.');
+        await message.author.send({ content: dmText, components: [row] });
+        await message.reply('✅ تم فتح تذكرتك في الخاص، افتح الخاص وأجب على الأسئلة ثم اضغط الزر لإرسال الإجابات.');
       } catch (err) {
         console.warn('Failed to send DM to user:', err);
-        await message.reply("⚠️ لم أستطع إرسال رسالة خاصة لك. افتح الخاص أو تواصل مع الإدارة.");
+        await message.reply("⚠️ لم أستطع إرسال رسالة خاصة لك. تأكد أن الخاص مفتوح أو تواصل مع الإدارة.");
       }
 
+      // إشعار عام في الشات إن تذكرة فتحت (اختياري)
       try {
         const complaintsChannel = await client.channels.fetch(complaintsChannelId).catch(() => null);
-
-        if (!complaintsChannel) {
-          console.error('Channel fetch returned null for ID:', complaintsChannelId);
-          await message.channel.send('⚠️ لم أتمكن من الوصول لروم الشكاوي. تأكد من صحة الـ ID وصلاحيات البوت.');
-          return;
-        }
-
-        if (typeof complaintsChannel.send !== 'function') {
-          console.error('Fetched channel is not sendable (not a text channel).');
-          await message.channel.send('⚠️ روم الشكاوي ليس روم نصي أو البوت لا يملك صلاحية الإرسال هناك.');
-          return;
-        }
-
-        await complaintsChannel.send(`📢 **تذكرة جديدة**  
-━━━━━━━━━━━━━━━━━━  
-👤 العضو: ${getDisplayName(message.author)}  
-🆔 ID: ${message.author.id}  
-💬 فتح تذكرة جديدة ويستعد للإجابة على الأسئلة في الخاص.  
-━━━━━━━━━━━━━━━━━━`);
-      } catch (err) {
-        console.error('Error sending to complaints channel:', err);
-        await message.channel.send('⚠️ حدث خطأ أثناء محاولة إرسال إشعار التذكرة. تأكد من صلاحيات البوت.');
-      }
-
-      return;
-    }
-
-    // إنهاء التذكرة فورًا عند كتابة "تم" أو "end" في الخاص — **ترقيم بسيط 1,2,3**
-    const lower = content.toLowerCase();
-    if (!message.guild && (lower === 'تم' || lower === 'end')) {
-      try {
-        const fetched = await message.channel.messages.fetch({ limit: 100 });
-        const userMessages = fetched
-          .filter(m => m.author.id === message.author.id && m.content && !['تم', 'end'].includes(m.content.trim().toLowerCase()))
-          .sort((a, b) => a.createdTimestamp - b.createdTimestamp);
-
-        let answersText = '';
-        if (userMessages.size === 0) {
-          answersText = 'لا توجد إجابات نصية في الخاص.';
-        } else {
-          // **ترقيم بسيط وآمن**: 1. 2. 3.
-          answersText = userMessages.map((m, i) => `${i + 1}. ${m.content}`).join('\n');
-        }
-
-        const complaintsChannel = await client.channels.fetch(complaintsChannelId).catch(() => null);
-
         if (complaintsChannel && typeof complaintsChannel.send === 'function') {
-          await complaintsChannel.send(`📥 **إجابات تذكرة مكتملة**  
-━━━━━━━━━━━━━━━━━━  
-👤 العضو: ${getDisplayName(message.author)}  
-🆔 ID: ${message.author.id}  
-💬 الإجابات المرسلة من الخاص:  
-${answersText}  
-━━━━━━━━━━━━━━━━━━`);
-          await message.channel.send('✅ تم إرسال إجاباتك لروم الشكاوي. شكراً لتعاونك.');
-        } else {
-          await message.channel.send('⚠️ لم أتمكن من إيجاد روم الشكاوي لإرسال الإجابات. تواصل مع الإدارة.');
+          await complaintsChannel.send(`📢 **تذكرة جديدة**\n👤 العضو: ${getDisplayName(message.author)}\n🆔 ID: ${message.author.id}\n💬 فتح تذكرة جديدة ويستعد للإجابة في الخاص.`);
         }
       } catch (err) {
-        console.error('Error forwarding DM answers:', err);
-        await message.channel.send('⚠️ حدث خطأ أثناء محاولة إرسال إجاباتك. حاول مرة أخرى أو تواصل مع الإدارة.');
+        console.error('Error notifying complaints channel on newticket:', err);
       }
 
       return;
@@ -309,7 +268,59 @@ ${answersText}
   }
 });
 
-// تشغيل البوت
+// ====== حدث التعامل مع الضغط على الأزرار (Interaction) ======
+client.on(Events.InteractionCreate, async (interaction) => {
+  try {
+    if (!interaction.isButton()) return;
+
+    if (interaction.customId === 'finish_ticket') {
+      // تأكد إن التفاعل في DM
+      const channel = interaction.channel;
+      if (!channel || channel.type !== ChannelType.DM) {
+        return interaction.reply({ content: '⚠️ هذا الزر يعمل فقط داخل الرسائل الخاصة (DM). افتح الخاص واضغط الزر هناك.', ephemeral: true });
+      }
+
+      await interaction.deferReply({ ephemeral: true });
+
+      try {
+        // جلب آخر الرسائل من DM (حد أقصى 100 رسالة)
+        const fetched = await channel.messages.fetch({ limit: 100 });
+        // فلترة رسائل العضو (إجابات الاستمارة) واستبعاد رسائل البوت
+        const userMessages = fetched
+          .filter(m => m.author.id === interaction.user.id && m.content && !m.author.bot)
+          .sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+
+        // بناء نص الإجابات بترقيم بسيط 1., 2., 3.
+        let answersText = '';
+        if (userMessages.size === 0) {
+          answersText = 'لا توجد إجابات نصية في الخاص.';
+        } else {
+          answersText = userMessages.map((m, i) => `${i + 1}. ${m.content}`).join('\n');
+        }
+
+        // جلب قناة الشكاوي وإرسال الإجابات هناك
+        const complaintsChannel = await client.channels.fetch(complaintsChannelId).catch(() => null);
+
+        if (complaintsChannel && typeof complaintsChannel.send === 'function') {
+          await complaintsChannel.send({
+            content: `📥 **إجابات تذكرة مكتملة**\n━━━━━━━━━━━━━━━━━━\n👤 العضو: ${getDisplayName(interaction.user)}\n🆔 ID: ${interaction.user.id}\n💬 الإجابات المرسلة من الخاص:\n${answersText}\n━━━━━━━━━━━━━━━━━━`
+          });
+
+          await interaction.editReply({ content: '✅ تم إرسال إجاباتك لروم الشكاوي بنجاح. شكراً لتعاونك.' });
+        } else {
+          await interaction.editReply({ content: '⚠️ لم أتمكن من إيجاد روم الشكاوي لإرسال الإجابات. تواصل مع الإدارة.' });
+        }
+      } catch (err) {
+        console.error('Error while finishing ticket via button:', err);
+        await interaction.editReply({ content: '⚠️ حدث خطأ أثناء محاولة إرسال إجاباتك. حاول مرة أخرى أو تواصل مع الإدارة.' });
+      }
+    }
+  } catch (err) {
+    console.error('Unhandled error in interaction handler:', err);
+  }
+});
+
+// ====== تشغيل البوت ======
 client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });

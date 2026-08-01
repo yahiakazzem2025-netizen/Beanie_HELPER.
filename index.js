@@ -285,9 +285,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
       try {
         // جلب آخر الرسائل من DM (حد أقصى 100 رسالة)
         const fetched = await channel.messages.fetch({ limit: 100 });
-        // فلترة رسائل العضو (إجابات الاستمارة) واستبعاد رسائل البوت
+
+        // فلترة رسائل العضو فقط، استبعاد رسائل البوت، استبعاد الأوامر (اللي تبدأ بـ "!")
         const userMessages = fetched
-          .filter(m => m.author.id === interaction.user.id && m.content && !m.author.bot)
+          .filter(m => {
+            if (!m.content) return false;
+            if (m.author.id !== interaction.user.id) return false; // رسائل العضو فقط
+            if (m.author.bot) return false; // استبعاد أي بوت (أمان)
+            const txt = m.content.trim();
+            if (txt.length === 0) return false;
+            if (txt.startsWith('!')) return false; // استبعاد أوامر
+            return true;
+          })
           .sort((a, b) => a.createdTimestamp - b.createdTimestamp);
 
         // بناء نص الإجابات بترقيم بسيط 1., 2., 3.
@@ -295,7 +304,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
         if (userMessages.size === 0) {
           answersText = 'لا توجد إجابات نصية في الخاص.';
         } else {
-          answersText = userMessages.map((m, i) => `${i + 1}. ${m.content}`).join('\n');
+          const lines = userMessages.map((m, i) => `${i + 1}. ${m.content.replace(/\r?\n/g, ' ')}`);
+          answersText = lines.join('\n');
         }
 
         // جلب قناة الشكاوي وإرسال الإجابات هناك

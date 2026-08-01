@@ -126,14 +126,14 @@ client.on('messageCreate', async (message) => {
     message.reply("🛒 شوب Zyro بيتفتح لما تكتب الأمر !help2 في البوت المخصص له.");
   }
 
-  // الرسائل 💌 (منسقة)
+  // الرسائل 💌 (منسقة بدون كلمة الإدارة)
   if (command === '!dm') {
     const user = message.mentions.users.first();
     const msg = args.slice(2).join(' ');
     if (user && msg) {
-      user.send(`📩 **رسالة من الإدارة**  
+      user.send(`💌 **رسالة خاصة**  
 ━━━━━━━━━━━━━━━━━━  
-👤 المرسل: ${message.author.username}  
+👤 من: ${message.author.username}  
 💬 المحتوى:  
 ${msg}  
 ━━━━━━━━━━━━━━━━━━`)
@@ -147,9 +147,9 @@ ${msg}
     if (msg) {
       message.guild.members.cache.forEach(member => {
         if (!member.user.bot) {
-          member.send(`📢 **إشعار عام من الإدارة**  
+          member.send(`📢 **إشعار عام**  
 ━━━━━━━━━━━━━━━━━━  
-👤 المرسل: ${message.author.username}  
+👤 من: ${message.author.username}  
 💬 المحتوى:  
 ${msg}  
 ━━━━━━━━━━━━━━━━━━`)

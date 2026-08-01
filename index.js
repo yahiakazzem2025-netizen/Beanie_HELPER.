@@ -13,6 +13,14 @@ const client = new Client({
 // نقاط مؤقتة
 let points = {};
 
+// دالة تعرض الاسم أو اللقب المناسب
+function getDisplayName(user) {
+  if (user.username === "yigo_gaming2013_yt") {
+    return "「 ✦ OWNER ✦ 」";
+  }
+  return user.username;
+}
+
 // بانلز
 const panels = {
   1: `🎫 بانل التذاكر
@@ -108,7 +116,7 @@ client.on('messageCreate', async (message) => {
     const amount = parseInt(args[2]);
     if (user && !isNaN(amount)) {
       points[user.id] = (points[user.id] || 0) + amount;
-      message.reply(`✅ تمت إضافة ${amount} نقطة لـ ${user.username}`);
+      message.reply(`✅ تمت إضافة ${amount} نقطة لـ ${getDisplayName(user)}`);
     }
   }
 
@@ -117,7 +125,7 @@ client.on('messageCreate', async (message) => {
     const amount = parseInt(args[2]);
     if (user && !isNaN(amount)) {
       points[user.id] = (points[user.id] || 0) - amount;
-      message.reply(`❌ تم خصم ${amount} نقطة من ${user.username}`);
+      message.reply(`❌ تم خصم ${amount} نقطة من ${getDisplayName(user)}`);
     }
   }
 
@@ -126,14 +134,14 @@ client.on('messageCreate', async (message) => {
     message.reply("🛒 شوب Zyro بيتفتح لما تكتب الأمر !help2 في البوت المخصص له.");
   }
 
-  // الرسائل 💌 (منسقة بدون كلمة الإدارة)
+  // الرسائل 💌 (منسقة)
   if (command === '!dm') {
     const user = message.mentions.users.first();
     const msg = args.slice(2).join(' ');
     if (user && msg) {
       user.send(`💌 **رسالة خاصة**  
 ━━━━━━━━━━━━━━━━━━  
-👤 من: ${message.author.username}  
+👤 من: ${getDisplayName(message.author)}  
 💬 المحتوى:  
 ${msg}  
 ━━━━━━━━━━━━━━━━━━`)
@@ -149,7 +157,7 @@ ${msg}
         if (!member.user.bot) {
           member.send(`📢 **إشعار عام**  
 ━━━━━━━━━━━━━━━━━━  
-👤 من: ${message.author.username}  
+👤 من: ${getDisplayName(message.author)}  
 💬 المحتوى:  
 ${msg}  
 ━━━━━━━━━━━━━━━━━━`)
@@ -164,7 +172,7 @@ ${msg}
   if (command === '!welcome') {
     const user = message.mentions.users.first();
     if (user) {
-      message.channel.send(`🎉 أهلاً وسهلاً ${user.username} في السيرفر! نتمنى لك وقت ممتع.`);
+      message.channel.send(`🎉 أهلاً وسهلاً ${getDisplayName(user)} في السيرفر! نتمنى لك وقت ممتع.`);
     }
   }
 

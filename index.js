@@ -249,12 +249,10 @@ ${msg}
 
     // إرسال إشعار لروم الشكاوي (يحاول أولاً من guild ثم كقناة عامة)
     try {
-      // حاول الحصول على القناة من الكاش الخاص بالسيرفر أولاً
       let complaintsChannel = null;
       if (message.guild) {
         complaintsChannel = message.guild.channels.cache.get(complaintsChannelId);
       }
-      // إذا لم توجد القناة في الكاش، حاول جلبها من العميل
       if (!complaintsChannel) {
         try {
           complaintsChannel = await client.channels.fetch(complaintsChannelId);
@@ -271,12 +269,64 @@ ${msg}
 💬 فتح تذكرة جديدة ويستعد للإجابة على الأسئلة في الخاص.  
 ━━━━━━━━━━━━━━━━━━`);
       } else {
-        // لو القناة مش موجودة أو مش نصية
         await message.channel.send('⚠️ لم أتمكن من إرسال إشعار لروم الشكاوي، تأكد من صحة الـ ID وصلاحيات البوت.');
       }
     } catch (err) {
-      // خطأ عام
       await message.channel.send('⚠️ حدث خطأ أثناء محاولة إرسال إشعار التذكرة.');
+    }
+
+    return;
+  }
+
+  // ====== عندما يكتب المستخدم "خلصت" في الخاص (DM) ======
+  // الفكرة: لو العضو رد "خلصت" في الخاص، نجمع آخر الرسائل اللي كتبها العضو في نفس الـ DM (إجابات الاستمارة)
+  // ونبعتها لروم الشكاوي بالـ ID المحدد، مع تأكيد للعضو.
+  if (content === 'خلصت') {
+    // تأكد إن الرسالة في الخاص (DM)
+    if (message.guild) {
+      return message.reply('⚠️ استخدم هذا الأمر في الخاص بعد ما ترد على الأسئلة في الرسائل الخاصة.');
+    }
+
+    try {
+      // جلب آخر الرسائل من قناة الـ DM (الرسائل في DM channel)
+      const fetched = await message.channel.messages.fetch({ limit: 50 });
+      // فلترة رسائل العضو (اللي هي إجابات الاستمارة) واستبعاد أوامر "خلصت"
+      const userMessages = fetched
+        .filter(m => m.author.id === message.author.id && m.content && m.content.trim() !== 'خلصت')
+        .sort((a, b) => a.createdTimestamp - b.createdTimestamp); // ترتيب من الأقدم للأحدث
+
+      let answersText = '';
+      if (userMessages.size === 0) {
+        answersText = 'لا توجد إجابات نصية في الخاص.';
+      } else {
+        // نجمع الرسائل مع تاريخ بسيط
+        answersText = userMessages.map(m => `• ${m.content}`).join('\n');
+      }
+
+      // جلب قناة الشكاوي وإرسال الإجابات هناك
+      let complaintsChannel = null;
+      try {
+        complaintsChannel = await client.channels.fetch(complaintsChannelId);
+      } catch (e) {
+        complaintsChannel = null;
+      }
+
+      if (complaintsChannel && complaintsChannel.isText()) {
+        await complaintsChannel.send(`📥 **إجابات تذكرة مكتملة**  
+━━━━━━━━━━━━━━━━━━  
+👤 العضو: ${getDisplayName(message.author)}  
+🆔 ID: ${message.author.id}  
+💬 الإجابات المرسلة من الخاص:  
+${answersText}  
+━━━━━━━━━━━━━━━━━━`);
+        // تأكيد للعضو في الخاص
+        await message.channel.send('✅ تم إرسال إجاباتك لروم الشكاوي. شكراً لتعاونك.');
+      } else {
+        await message.channel.send('⚠️ لم أتمكن من إيجاد روم الشكاوي لإرسال الإجابات. تواصل مع الإدارة.');
+      }
+    } catch (err) {
+      console.error('Error forwarding DM answers:', err);
+      await message.channel.send('⚠️ حدث خطأ أثناء محاولة إرسال إجاباتك. حاول مرة أخرى أو تواصل مع الإدارة.');
     }
 
     return;

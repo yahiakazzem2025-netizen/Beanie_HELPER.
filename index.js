@@ -1,3 +1,4 @@
+```js
 // index.js
 const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
@@ -13,7 +14,7 @@ const client = new Client({
 });
 
 // ====== إعدادات عامة ======
-const complaintsChannelId = "1532879744985469060"; // ID روم الشكاوي
+const complaintsChannelId = "1532879744985469060"; // ID روم الشكاوي (المطلوب)
 let points = {}; // تخزين نقاط مؤقت (في الذاكرة)
 
 // دالة تعرض الاسم أو اللقب المناسب
@@ -247,21 +248,12 @@ ${msg}
       return message.reply("⚠️ لم أستطع إرسال رسالة خاصة لك، تأكد أن الخاص مفتوح.");
     }
 
-    // إرسال إشعار لروم الشكاوي (يحاول أولاً من guild ثم كقناة عامة)
+    // إرسال إشعار لروم الشكاوي (باستخدام الـ ID المحدد مباشرة)
     try {
-      let complaintsChannel = null;
-      if (message.guild) {
-        complaintsChannel = message.guild.channels.cache.get(complaintsChannelId);
-      }
-      if (!complaintsChannel) {
-        try {
-          complaintsChannel = await client.channels.fetch(complaintsChannelId);
-        } catch (e) {
-          complaintsChannel = null;
-        }
-      }
+      // جلب القناة مباشرة عبر client.channels.fetch لضمان الوصول للقناة بغض النظر عن الكاش
+      const complaintsChannel = await client.channels.fetch(complaintsChannelId).catch(() => null);
 
-      if (complaintsChannel && complaintsChannel.isText()) {
+      if (complaintsChannel && (typeof complaintsChannel.send === 'function')) {
         await complaintsChannel.send(`📢 **تذكرة جديدة**  
 ━━━━━━━━━━━━━━━━━━  
 👤 العضو: ${getDisplayName(message.author)}  
@@ -299,19 +291,14 @@ ${msg}
       if (userMessages.size === 0) {
         answersText = 'لا توجد إجابات نصية في الخاص.';
       } else {
-        // نجمع الرسائل مع تاريخ بسيط
-        answersText = userMessages.map(m => `• ${m.content}`).join('\n');
+        // نجمع الرسائل مع ترقيم بسيط
+        answersText = userMessages.map((m, i) => `${i + 1}. ${m.content}`).join('\n');
       }
 
-      // جلب قناة الشكاوي وإرسال الإجابات هناك
-      let complaintsChannel = null;
-      try {
-        complaintsChannel = await client.channels.fetch(complaintsChannelId);
-      } catch (e) {
-        complaintsChannel = null;
-      }
+      // جلب قناة الشكاوي وإرسال الإجابات هناك باستخدام الـ ID المباشر
+      const complaintsChannel = await client.channels.fetch(complaintsChannelId).catch(() => null);
 
-      if (complaintsChannel && complaintsChannel.isText()) {
+      if (complaintsChannel && (typeof complaintsChannel.send === 'function')) {
         await complaintsChannel.send(`📥 **إجابات تذكرة مكتملة**  
 ━━━━━━━━━━━━━━━━━━  
 👤 العضو: ${getDisplayName(message.author)}  
@@ -340,3 +327,4 @@ client.once('ready', () => {
 });
 
 client.login(process.env.TOKEN);
+```

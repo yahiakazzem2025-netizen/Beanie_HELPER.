@@ -1,3 +1,4 @@
+```js
 // index.js
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
 require('dotenv').config();
@@ -7,7 +8,9 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.DirectMessages
+    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildPresences
   ],
   partials: [Partials.Channel, Partials.Message, Partials.User]
 });
@@ -36,7 +39,20 @@ const panels = {
   2: `📋 قوانين السيرفر
 ------------------------------
 احترام جميع الأعضاء والإدارة واجب.
-... (اختصار للقوانين كما في النسخة السابقة)
+يمنع السب، الشتم، العنصرية أو أي إساءة.
+يمنع نشر أي محتوى مخالف أو غير لائق.
+يمنع السبام أو تكرار الرسائل أو المنشن المزعج.
+يمنع نشر روابط سيرفرات ديسكورد أو الإعلانات بدون إذن.
+يمنع انتحال شخصية أي عضو أو إداري.
+يمنع النصب أو الاحتيال، وأي حالة نصب تعرض صاحبها للحظر المباشر.
+يجب الالتزام بقوانين كل روم وعدم الكتابة خارج موضوعه.
+يمنع بيع أو شراء الحسابات أو أي شيء مخالف لشروط المنصة.
+في التبادلات، يُفضل استخدام وسيط معتمد من السيرفر.
+أي مشكلة بين عضوين يتم فتح تذكرة وعدم إثارة المشاكل في الشات العام.
+يمنع استخدام الألفاظ البذيئة أو إثارة الفتن.
+قرارات الإدارة تُحترم، ويمكن الاعتراض عليها عبر التذاكر فقط.
+العقوبات تبدأ من تنبيه أو تحذير، وقد تصل إلى التايم أوت أو الطرد أو الحظر حسب المخالفة.
+دخولك للسيرفر يعني موافقتك على جميع هذه القوانين.
 ------------------------------`
 };
 
@@ -45,7 +61,8 @@ client.on('messageCreate', async (message) => {
   try {
     if (message.author?.bot) return;
 
-    const content = message.content?.trim();
+    const contentRaw = message.content ?? '';
+    const content = contentRaw.trim();
     if (!content) return;
     const args = content.split(/\s+/);
     const command = args[0];
@@ -72,8 +89,8 @@ client.on('messageCreate', async (message) => {
 !zshop → فتح شوب Zyro (من بوت تاني)
 
 💌 الرسائل
-!dm @user الرسالة → إرسال رسالة خاصة (منسقة)
-!dms الرسالة → إرسال الرسالة لكل الأعضاء (منسقة)
+!dm @user الرسالة → إرسال رسالة خاصة (منسق)
+!dms الرسالة → إرسال الرسالة لكل الأعضاء (منسق)
 
 🎉 الترحيب
 !welcome @user → إرسال رسالة ترحيب لعضو جديد
@@ -220,19 +237,19 @@ ${msg}
 3️⃣ هل جربت حلول سابقة؟ وما هي؟  
 4️⃣ هل عندك صور أو تفاصيل إضافية تساعدنا؟  
 
-✍️ اكتب إجاباتك هنا في الخاص، وسيتم مراجعتها من فريق الدعم.  
+✍️ اكتب إجاباتك هنا في الخاص، وبعد الانتهاء اكتب "تم" أو "end" لإرسال الإجابات فورًا.  
 ━━━━━━━━━━━━━━━━━━`;
 
       // حاول تبعت DM أولاً
       try {
         await message.author.send(dmText);
-        await message.reply('✅ تم فتح تذكرتك في الخاص، من فضلك جاوب على الأسئلة هناك.');
+        await message.reply('✅ تم فتح تذكرتك في الخاص، من فضلك جاوب على الأسئلة هناك ثم اكتب "تم" أو "end" عند الانتهاء.');
       } catch (err) {
         console.warn('Failed to send DM to user:', err);
         await message.reply("⚠️ لم أستطع إرسال رسالة خاصة لك. افتح الخاص أو تواصل مع الإدارة.");
       }
 
-      // الآن نرسل إشعار للقناة بالـ ID المحدد (نستخدم client.channels.fetch مباشرة)
+      // إشعار للقناة بالـ ID المحدد
       try {
         const complaintsChannel = await client.channels.fetch(complaintsChannelId).catch(() => null);
 
@@ -242,7 +259,6 @@ ${msg}
           return;
         }
 
-        // تحقق إن القناة تسمح بالإرسال (نحاول إرسال رسالة اختبارية مع محتوى التذكرة)
         if (typeof complaintsChannel.send !== 'function') {
           console.error('Fetched channel is not sendable (not a text channel).');
           await message.channel.send('⚠️ روم الشكاوي ليس روم نصي أو البوت لا يملك صلاحية الإرسال هناك.');
@@ -264,24 +280,22 @@ ${msg}
       return;
     }
 
-    // ====== عندما يكتب المستخدم "خلصت" في الخاص (DM) ======
-    if (content === 'خلصت') {
-      // تأكد إن الرسالة في الخاص (DM)
-      if (message.guild) {
-        return message.reply('⚠️ استخدم هذا الأمر في الخاص بعد ما ترد على الأسئلة في الرسائل الخاصة.');
-      }
-
+    // ====== إنهاء التذكرة فورًا عند كتابة "تم" أو "end" في الخاص ======
+    const lower = content.toLowerCase();
+    if (!message.guild && (lower === 'تم' || lower === 'end')) {
       try {
         // جلب آخر الرسائل من قناة الـ DM (الرسائل في DM channel)
-        const fetched = await message.channel.messages.fetch({ limit: 50 });
+        const fetched = await message.channel.messages.fetch({ limit: 100 });
+        // فلترة رسائل العضو (اللي هي إجابات الاستمارة) واستبعاد أوامر "تم"/"end" ورسائل البوت
         const userMessages = fetched
-          .filter(m => m.author.id === message.author.id && m.content && m.content.trim() !== 'خلصت')
+          .filter(m => m.author.id === message.author.id && m.content && !['تم', 'end'].includes(m.content.trim().toLowerCase()))
           .sort((a, b) => a.createdTimestamp - b.createdTimestamp);
 
         let answersText = '';
         if (userMessages.size === 0) {
           answersText = 'لا توجد إجابات نصية في الخاص.';
         } else {
+          // ترقيم بسيط من 1,2,3
           answersText = userMessages.map((m, i) => `${i + 1}. ${m.content}`).join('\n');
         }
 
@@ -319,3 +333,4 @@ client.once('ready', () => {
 });
 
 client.login(process.env.TOKEN);
+```

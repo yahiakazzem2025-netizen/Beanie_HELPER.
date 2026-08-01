@@ -67,11 +67,11 @@ client.on('messageCreate', async (message) => {
 -point @user 10 → خصم نقاط
 
 🛒 الشوب
-!zshop → فتح شوب Zyro
+!zshop → فتح شوب Zyro (من بوت تاني)
 
 💌 الرسائل
-!dm @user الرسالة → إرسال رسالة خاصة
-!dms الرسالة → إرسال الرسالة لكل الأعضاء
+!dm @user الرسالة → إرسال رسالة خاصة (منسقة)
+!dms الرسالة → إرسال الرسالة لكل الأعضاء (منسقة)
 
 🎉 الترحيب
 !welcome @user → إرسال رسالة ترحيب لعضو جديد
@@ -126,13 +126,19 @@ client.on('messageCreate', async (message) => {
     message.reply("🛒 شوب Zyro بيتفتح لما تكتب الأمر !help2 في البوت المخصص له.");
   }
 
-  // الرسائل 💌
+  // الرسائل 💌 (منسقة)
   if (command === '!dm') {
     const user = message.mentions.users.first();
     const msg = args.slice(2).join(' ');
     if (user && msg) {
-      user.send(`💌 رسالة من ${message.author.username}: ${msg}`).catch(() => {});
-      message.reply('📩 تم إرسال الرسالة في الخاص.');
+      user.send(`📩 **رسالة من الإدارة**  
+━━━━━━━━━━━━━━━━━━  
+👤 المرسل: ${message.author.username}  
+💬 المحتوى:  
+${msg}  
+━━━━━━━━━━━━━━━━━━`)
+        .catch(() => {});
+      message.reply('✅ تم إرسال الرسالة في الخاص.');
     }
   }
 
@@ -141,10 +147,16 @@ client.on('messageCreate', async (message) => {
     if (msg) {
       message.guild.members.cache.forEach(member => {
         if (!member.user.bot) {
-          member.send(`📢 رسالة من ${message.author.username}: ${msg}`).catch(() => {});
+          member.send(`📢 **إشعار عام من الإدارة**  
+━━━━━━━━━━━━━━━━━━  
+👤 المرسل: ${message.author.username}  
+💬 المحتوى:  
+${msg}  
+━━━━━━━━━━━━━━━━━━`)
+            .catch(() => {});
         }
       });
-      message.reply('📩 تم إرسال الرسالة لكل الأعضاء في الخاص.');
+      message.reply('✅ تم إرسال الرسالة لكل الأعضاء في الخاص.');
     }
   }
 

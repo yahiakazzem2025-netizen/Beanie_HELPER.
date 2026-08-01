@@ -36,7 +36,7 @@ const panels = {
   2: `📋 قوانين السيرفر
 ------------------------------
 احترام جميع الأعضاء والإدارة واجب.
-... (اختصار للقوانين كما في النسخة السابقة)
+... (نفس القوانين كما في النسخة السابقة)
 ------------------------------`
 };
 
@@ -72,8 +72,8 @@ client.on('messageCreate', async (message) => {
 !zshop → فتح شوب Zyro (من بوت تاني)
 
 💌 الرسائل
-!dm @user الرسالة → إرسال رسالة خاصة (منسقة)
-!dms الرسالة → إرسال الرسالة لكل الأعضاء (منسقة)
+!dm @user الرسالة → إرسال رسالة خاصة (منسق)
+!dms الرسالة → إرسال الرسالة لكل الأعضاء (منسق)
 
 🎉 الترحيب
 !welcome @user → إرسال رسالة ترحيب لعضو جديد
@@ -242,7 +242,6 @@ ${msg}
           return;
         }
 
-        // تحقق إن القناة تسمح بالإرسال (نحاول إرسال رسالة اختبارية مع محتوى التذكرة)
         if (typeof complaintsChannel.send !== 'function') {
           console.error('Fetched channel is not sendable (not a text channel).');
           await message.channel.send('⚠️ روم الشكاوي ليس روم نصي أو البوت لا يملك صلاحية الإرسال هناك.');
@@ -274,14 +273,16 @@ ${msg}
       try {
         // جلب آخر الرسائل من قناة الـ DM (الرسائل في DM channel)
         const fetched = await message.channel.messages.fetch({ limit: 50 });
+        // فلترة رسائل العضو (اللي هي إجابات الاستمارة) واستبعاد أوامر "خلصت" ورسائل البوت
         const userMessages = fetched
-          .filter(m => m.author.id === message.author.id && m.content && m.content.trim() !== 'خلصت')
+          .filter(m => m.author.id === message.author.id && m.content && m.content.trim().toLowerCase() !== 'خلصت')
           .sort((a, b) => a.createdTimestamp - b.createdTimestamp);
 
         let answersText = '';
         if (userMessages.size === 0) {
           answersText = 'لا توجد إجابات نصية في الخاص.';
         } else {
+          // **ترقيم بسيط** من 1,2,3 بدل استخدام IDs
           answersText = userMessages.map((m, i) => `${i + 1}. ${m.content}`).join('\n');
         }
 
@@ -293,29 +294,4 @@ ${msg}
 ━━━━━━━━━━━━━━━━━━  
 👤 العضو: ${getDisplayName(message.author)}  
 🆔 ID: ${message.author.id}  
-💬 الإجابات المرسلة من الخاص:  
-${answersText}  
-━━━━━━━━━━━━━━━━━━`);
-          await message.channel.send('✅ تم إرسال إجاباتك لروم الشكاوي. شكراً لتعاونك.');
-        } else {
-          await message.channel.send('⚠️ لم أتمكن من إيجاد روم الشكاوي لإرسال الإجابات. تواصل مع الإدارة.');
-        }
-      } catch (err) {
-        console.error('Error forwarding DM answers:', err);
-        await message.channel.send('⚠️ حدث خطأ أثناء محاولة إرسال إجاباتك. حاول مرة أخرى أو تواصل مع الإدارة.');
-      }
-
-      return;
-    }
-
-  } catch (outerErr) {
-    console.error('Unhandled error in messageCreate handler:', outerErr);
-  }
-});
-
-// ====== تشغيل البوت ======
-client.once('ready', () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
-});
-
-client.login(process.env.TOKEN);
+💬

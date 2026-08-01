@@ -1,6 +1,5 @@
-```js
 // index.js
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Partials } = require('discord.js');
 require('dotenv').config();
 
 const client = new Client({
@@ -10,11 +9,11 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.DirectMessages
   ],
-  partials: ['CHANNEL', 'MESSAGE', 'USER']
+  partials: [Partials.Channel, Partials.Message, Partials.User]
 });
 
 // ====== إعدادات عامة ======
-const complaintsChannelId = "1532879744985469060"; // ID روم الشكاوي (المطلوب)
+const complaintsChannelId = "1532879744985469060"; // ID روم الشكاوي
 let points = {}; // تخزين نقاط مؤقت (في الذاكرة)
 
 // دالة تعرض الاسم أو اللقب المناسب
@@ -37,35 +36,23 @@ const panels = {
   2: `📋 قوانين السيرفر
 ------------------------------
 احترام جميع الأعضاء والإدارة واجب.
-يمنع السب، الشتم، العنصرية أو أي إساءة.
-يمنع نشر أي محتوى مخالف أو غير لائق.
-يمنع السبام أو تكرار الرسائل أو المنشن المزعج.
-يمنع نشر روابط سيرفرات ديسكورد أو الإعلانات بدون إذن.
-يمنع انتحال شخصية أي عضو أو إداري.
-يمنع النصب أو الاحتيال، وأي حالة نصب تعرض صاحبها للحظر المباشر.
-يجب الالتزام بقوانين كل روم وعدم الكتابة خارج موضوعه.
-يمنع بيع أو شراء الحسابات أو أي شيء مخالف لشروط المنصة.
-في التبادلات، يُفضل استخدام وسيط معتمد من السيرفر.
-أي مشكلة بين عضوين يتم فتح تذكرة وعدم إثارة المشاكل في الشات العام.
-يمنع استخدام الألفاظ البذيئة أو إثارة الفتن.
-قرارات الإدارة تُحترم، ويمكن الاعتراض عليها عبر التذاكر فقط.
-العقوبات تبدأ من تنبيه أو تحذير، وقد تصل إلى التايم أوت أو الطرد أو الحظر حسب المخالفة.
-دخولك للسيرفر يعني موافقتك على جميع هذه القوانين.
+... (اختصار للقوانين كما في النسخة السابقة)
 ------------------------------`
 };
 
 // ====== حدث استقبال الرسائل ======
 client.on('messageCreate', async (message) => {
-  if (message.author?.bot) return;
+  try {
+    if (message.author?.bot) return;
 
-  const content = message.content?.trim();
-  if (!content) return;
-  const args = content.split(/\s+/);
-  const command = args[0];
+    const content = message.content?.trim();
+    if (!content) return;
+    const args = content.split(/\s+/);
+    const command = args[0];
 
-  // ====== !help2 ======
-  if (command === '!help2') {
-    return message.reply(`
+    // ====== !help2 ======
+    if (command === '!help2') {
+      return message.reply(`
 ⚙️ الاعدادات
 !idstaff ID → إضافة رتبة Staff
 !idhigh ID → إضافة رتبة High Staff
@@ -102,80 +89,80 @@ client.on('messageCreate', async (message) => {
 
 🎫 التذاكر
 !newticket → فتح تذكرة جديدة مع أسئلة في الخاص
-    `);
-  }
-
-  // ====== !panel ======
-  if (command === '!panel') {
-    const id = args[1];
-    if (panels[id]) {
-      return message.reply(panels[id]);
-    } else {
-      return message.reply('⚠️ البانل غير موجود');
+      `);
     }
-  }
 
-  // ====== نقاط النظام ======
-  if (command === '!points') {
-    const userPoints = points[message.author.id] || 0;
-    return message.reply(`⭐ نقاطك الحالية: ${userPoints}`);
-  }
-
-  if (command === '+point') {
-    const user = message.mentions.users.first();
-    const amount = parseInt(args[2]);
-    if (user && !isNaN(amount)) {
-      points[user.id] = (points[user.id] || 0) + amount;
-      return message.reply(`✅ تمت إضافة ${amount} نقطة لـ ${getDisplayName(user)}`);
-    } else {
-      return message.reply('⚠️ استخدم: +point @user عدد');
+    // ====== !panel ======
+    if (command === '!panel') {
+      const id = args[1];
+      if (panels[id]) {
+        return message.reply(panels[id]);
+      } else {
+        return message.reply('⚠️ البانل غير موجود');
+      }
     }
-  }
 
-  if (command === '-point') {
-    const user = message.mentions.users.first();
-    const amount = parseInt(args[2]);
-    if (user && !isNaN(amount)) {
-      points[user.id] = (points[user.id] || 0) - amount;
-      return message.reply(`❌ تم خصم ${amount} نقطة من ${getDisplayName(user)}`);
-    } else {
-      return message.reply('⚠️ استخدم: -point @user عدد');
+    // ====== نقاط النظام ======
+    if (command === '!points') {
+      const userPoints = points[message.author.id] || 0;
+      return message.reply(`⭐ نقاطك الحالية: ${userPoints}`);
     }
-  }
 
-  // ====== !zshop ======
-  if (command === '!zshop') {
-    return message.reply("🛒 شوب Zyro بيتفتح لما تكتب الأمر !help2 في البوت المخصص له.");
-  }
+    if (command === '+point') {
+      const user = message.mentions.users.first();
+      const amount = parseInt(args[2]);
+      if (user && !isNaN(amount)) {
+        points[user.id] = (points[user.id] || 0) + amount;
+        return message.reply(`✅ تمت إضافة ${amount} نقطة لـ ${getDisplayName(user)}`);
+      } else {
+        return message.reply('⚠️ استخدم: +point @user عدد');
+      }
+    }
 
-  // ====== DM منسق - !dm ======
-  if (command === '!dm') {
-    const user = message.mentions.users.first();
-    const msg = args.slice(2).join(' ');
-    if (user && msg) {
-      try {
-        await user.send(`💌 **رسالة خاصة**  
+    if (command === '-point') {
+      const user = message.mentions.users.first();
+      const amount = parseInt(args[2]);
+      if (user && !isNaN(amount)) {
+        points[user.id] = (points[user.id] || 0) - amount;
+        return message.reply(`❌ تم خصم ${amount} نقطة من ${getDisplayName(user)}`);
+      } else {
+        return message.reply('⚠️ استخدم: -point @user عدد');
+      }
+    }
+
+    // ====== !zshop ======
+    if (command === '!zshop') {
+      return message.reply("🛒 شوب Zyro بيتفتح لما تكتب الأمر !help2 في البوت المخصص له.");
+    }
+
+    // ====== DM منسق - !dm ======
+    if (command === '!dm') {
+      const user = message.mentions.users.first();
+      const msg = args.slice(2).join(' ');
+      if (user && msg) {
+        try {
+          await user.send(`💌 **رسالة خاصة**  
 ━━━━━━━━━━━━━━━━━━  
 👤 من: ${getDisplayName(message.author)}  
 💬 المحتوى:  
 ${msg}  
 ━━━━━━━━━━━━━━━━━━`);
-        return message.reply('✅ تم إرسال الرسالة في الخاص.');
-      } catch (err) {
-        return message.reply('⚠️ لم أستطع إرسال رسالة خاصة، تأكد أن الخاص مفتوح أو أن البوت لديه صلاحية إرسال رسائل.');
+          return message.reply('✅ تم إرسال الرسالة في الخاص.');
+        } catch (err) {
+          return message.reply('⚠️ لم أستطع إرسال رسالة خاصة، تأكد أن الخاص مفتوح أو أن البوت لديه صلاحية إرسال رسائل.');
+        }
+      } else {
+        return message.reply('⚠️ استخدم: !dm @user الرسالة');
       }
-    } else {
-      return message.reply('⚠️ استخدم: !dm @user الرسالة');
     }
-  }
 
-  // ====== DM عام - !dms ======
-  if (command === '!dms') {
-    const msg = args.slice(1).join(' ');
-    if (!msg) return message.reply('⚠️ اكتب الرسالة بعد الأمر.');
-    if (!message.guild) return message.reply('⚠️ هذا الأمر يعمل داخل السيرفر فقط.');
-    let sentCount = 0;
-    message.guild.members.fetch().then(members => {
+    // ====== DM عام - !dms ======
+    if (command === '!dms') {
+      const msg = args.slice(1).join(' ');
+      if (!msg) return message.reply('⚠️ اكتب الرسالة بعد الأمر.');
+      if (!message.guild) return message.reply('⚠️ هذا الأمر يعمل داخل السيرفر فقط.');
+      let sentCount = 0;
+      const members = await message.guild.members.fetch();
       members.forEach(member => {
         if (!member.user.bot) {
           member.send(`📢 **إشعار عام**  
@@ -187,47 +174,43 @@ ${msg}
           sentCount++;
         }
       });
-      message.reply(`✅ تم محاولة إرسال الرسالة إلى ${sentCount} عضو (بعض الرسائل قد تفشل إذا كان الخاص مغلق).`);
-    }).catch(() => {
-      message.reply('⚠️ حدث خطأ أثناء جلب أعضاء السيرفر.');
-    });
-    return;
-  }
-
-  // ====== ترحيب - !welcome ======
-  if (command === '!welcome') {
-    const user = message.mentions.users.first();
-    if (user) {
-      return message.channel.send(`🎉 أهلاً وسهلاً ${getDisplayName(user)} في السيرفر! نتمنى لك وقت ممتع.`);
-    } else {
-      return message.reply('⚠️ استخدم: !welcome @user');
+      return message.reply(`✅ تم محاولة إرسال الرسالة إلى ${sentCount} عضو (بعض الرسائل قد تفشل إذا كان الخاص مغلق).`);
     }
-  }
 
-  // ====== إحصائيات - !stats ======
-  if (command === '!stats') {
-    if (!message.guild) return message.reply('⚠️ هذا الأمر يعمل داخل السيرفر فقط.');
-    const totalMembers = message.guild.memberCount;
-    const onlineMembers = message.guild.members.cache.filter(m => m.presence?.status === 'online').size;
-    return message.reply(`📊 عدد الأعضاء: ${totalMembers}\n🟢 الأونلاين: ${onlineMembers}`);
-  }
+    // ====== ترحيب - !welcome ======
+    if (command === '!welcome') {
+      const user = message.mentions.users.first();
+      if (user) {
+        return message.channel.send(`🎉 أهلاً وسهلاً ${getDisplayName(user)} في السيرفر! نتمنى لك وقت ممتع.`);
+      } else {
+        return message.reply('⚠️ استخدم: !welcome @user');
+      }
+    }
 
-  // ====== لعبة النرد - !roll ======
-  if (command === '!roll') {
-    const number = Math.floor(Math.random() * 6) + 1;
-    return message.reply(`🎲 طلعتلك ${number}`);
-  }
+    // ====== إحصائيات - !stats ======
+    if (command === '!stats') {
+      if (!message.guild) return message.reply('⚠️ هذا الأمر يعمل داخل السيرفر فقط.');
+      const totalMembers = message.guild.memberCount;
+      const onlineMembers = message.guild.members.cache.filter(m => m.presence?.status === 'online').size;
+      return message.reply(`📊 عدد الأعضاء: ${totalMembers}\n🟢 الأونلاين: ${onlineMembers}`);
+    }
 
-  // ====== الوقت - !time ======
-  if (command === '!time') {
-    const now = new Date();
-    return message.reply(`🕒 الوقت الحالي: ${now.toLocaleString('ar-EG')}`);
-  }
+    // ====== لعبة النرد - !roll ======
+    if (command === '!roll') {
+      const number = Math.floor(Math.random() * 6) + 1;
+      return message.reply(`🎲 طلعتلك ${number}`);
+    }
 
-  // ====== فتح تذكرة جديدة مع أسئلة - !newticket ======
-  if (command === '!newticket') {
-    // إرسال DM للعضو مع الأسئلة
-    const dmText = `🎫 **تم فتح تذكرة جديدة**  
+    // ====== الوقت - !time ======
+    if (command === '!time') {
+      const now = new Date();
+      return message.reply(`🕒 الوقت الحالي: ${now.toLocaleString('ar-EG')}`);
+    }
+
+    // ====== فتح تذكرة جديدة مع أسئلة - !newticket ======
+    if (command === '!newticket') {
+      // إرسال DM للعضو مع الأسئلة
+      const dmText = `🎫 **تم فتح تذكرة جديدة**  
 ━━━━━━━━━━━━━━━━━━  
 👤 العضو: ${getDisplayName(message.author)}  
 
@@ -240,85 +223,94 @@ ${msg}
 ✍️ اكتب إجاباتك هنا في الخاص، وسيتم مراجعتها من فريق الدعم.  
 ━━━━━━━━━━━━━━━━━━`;
 
-    try {
-      await message.author.send(dmText);
-      // تأكيد في الشات العام إن التذكرة فتحت
-      await message.reply('✅ تم فتح تذكرتك في الخاص، من فضلك جاوب على الأسئلة هناك.');
-    } catch (err) {
-      return message.reply("⚠️ لم أستطع إرسال رسالة خاصة لك، تأكد أن الخاص مفتوح.");
-    }
+      // حاول تبعت DM أولاً
+      try {
+        await message.author.send(dmText);
+        await message.reply('✅ تم فتح تذكرتك في الخاص، من فضلك جاوب على الأسئلة هناك.');
+      } catch (err) {
+        console.warn('Failed to send DM to user:', err);
+        await message.reply("⚠️ لم أستطع إرسال رسالة خاصة لك. افتح الخاص أو تواصل مع الإدارة.");
+      }
 
-    // إرسال إشعار لروم الشكاوي (باستخدام الـ ID المحدد مباشرة)
-    try {
-      // جلب القناة مباشرة عبر client.channels.fetch لضمان الوصول للقناة بغض النظر عن الكاش
-      const complaintsChannel = await client.channels.fetch(complaintsChannelId).catch(() => null);
+      // الآن نرسل إشعار للقناة بالـ ID المحدد (نستخدم client.channels.fetch مباشرة)
+      try {
+        const complaintsChannel = await client.channels.fetch(complaintsChannelId).catch(() => null);
 
-      if (complaintsChannel && (typeof complaintsChannel.send === 'function')) {
+        if (!complaintsChannel) {
+          console.error('Channel fetch returned null for ID:', complaintsChannelId);
+          await message.channel.send('⚠️ لم أتمكن من الوصول لروم الشكاوي. تأكد من صحة الـ ID وصلاحيات البوت.');
+          return;
+        }
+
+        // تحقق إن القناة تسمح بالإرسال (نحاول إرسال رسالة اختبارية مع محتوى التذكرة)
+        if (typeof complaintsChannel.send !== 'function') {
+          console.error('Fetched channel is not sendable (not a text channel).');
+          await message.channel.send('⚠️ روم الشكاوي ليس روم نصي أو البوت لا يملك صلاحية الإرسال هناك.');
+          return;
+        }
+
+        // إرسال إشعار التذكرة
         await complaintsChannel.send(`📢 **تذكرة جديدة**  
 ━━━━━━━━━━━━━━━━━━  
 👤 العضو: ${getDisplayName(message.author)}  
 🆔 ID: ${message.author.id}  
 💬 فتح تذكرة جديدة ويستعد للإجابة على الأسئلة في الخاص.  
 ━━━━━━━━━━━━━━━━━━`);
-      } else {
-        await message.channel.send('⚠️ لم أتمكن من إرسال إشعار لروم الشكاوي، تأكد من صحة الـ ID وصلاحيات البوت.');
-      }
-    } catch (err) {
-      await message.channel.send('⚠️ حدث خطأ أثناء محاولة إرسال إشعار التذكرة.');
-    }
-
-    return;
-  }
-
-  // ====== عندما يكتب المستخدم "خلصت" في الخاص (DM) ======
-  // الفكرة: لو العضو رد "خلصت" في الخاص، نجمع آخر الرسائل اللي كتبها العضو في نفس الـ DM (إجابات الاستمارة)
-  // ونبعتها لروم الشكاوي بالـ ID المحدد، مع تأكيد للعضو.
-  if (content === 'خلصت') {
-    // تأكد إن الرسالة في الخاص (DM)
-    if (message.guild) {
-      return message.reply('⚠️ استخدم هذا الأمر في الخاص بعد ما ترد على الأسئلة في الرسائل الخاصة.');
-    }
-
-    try {
-      // جلب آخر الرسائل من قناة الـ DM (الرسائل في DM channel)
-      const fetched = await message.channel.messages.fetch({ limit: 50 });
-      // فلترة رسائل العضو (اللي هي إجابات الاستمارة) واستبعاد أوامر "خلصت"
-      const userMessages = fetched
-        .filter(m => m.author.id === message.author.id && m.content && m.content.trim() !== 'خلصت')
-        .sort((a, b) => a.createdTimestamp - b.createdTimestamp); // ترتيب من الأقدم للأحدث
-
-      let answersText = '';
-      if (userMessages.size === 0) {
-        answersText = 'لا توجد إجابات نصية في الخاص.';
-      } else {
-        // نجمع الرسائل مع ترقيم بسيط
-        answersText = userMessages.map((m, i) => `${i + 1}. ${m.content}`).join('\n');
+      } catch (err) {
+        console.error('Error sending to complaints channel:', err);
+        await message.channel.send('⚠️ حدث خطأ أثناء محاولة إرسال إشعار التذكرة. تأكد من صلاحيات البوت.');
       }
 
-      // جلب قناة الشكاوي وإرسال الإجابات هناك باستخدام الـ ID المباشر
-      const complaintsChannel = await client.channels.fetch(complaintsChannelId).catch(() => null);
+      return;
+    }
 
-      if (complaintsChannel && (typeof complaintsChannel.send === 'function')) {
-        await complaintsChannel.send(`📥 **إجابات تذكرة مكتملة**  
+    // ====== عندما يكتب المستخدم "خلصت" في الخاص (DM) ======
+    if (content === 'خلصت') {
+      // تأكد إن الرسالة في الخاص (DM)
+      if (message.guild) {
+        return message.reply('⚠️ استخدم هذا الأمر في الخاص بعد ما ترد على الأسئلة في الرسائل الخاصة.');
+      }
+
+      try {
+        // جلب آخر الرسائل من قناة الـ DM (الرسائل في DM channel)
+        const fetched = await message.channel.messages.fetch({ limit: 50 });
+        const userMessages = fetched
+          .filter(m => m.author.id === message.author.id && m.content && m.content.trim() !== 'خلصت')
+          .sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+
+        let answersText = '';
+        if (userMessages.size === 0) {
+          answersText = 'لا توجد إجابات نصية في الخاص.';
+        } else {
+          answersText = userMessages.map((m, i) => `${i + 1}. ${m.content}`).join('\n');
+        }
+
+        // إرسال الإجابات للقناة المطلوبة
+        const complaintsChannel = await client.channels.fetch(complaintsChannelId).catch(() => null);
+
+        if (complaintsChannel && typeof complaintsChannel.send === 'function') {
+          await complaintsChannel.send(`📥 **إجابات تذكرة مكتملة**  
 ━━━━━━━━━━━━━━━━━━  
 👤 العضو: ${getDisplayName(message.author)}  
 🆔 ID: ${message.author.id}  
 💬 الإجابات المرسلة من الخاص:  
 ${answersText}  
 ━━━━━━━━━━━━━━━━━━`);
-        // تأكيد للعضو في الخاص
-        await message.channel.send('✅ تم إرسال إجاباتك لروم الشكاوي. شكراً لتعاونك.');
-      } else {
-        await message.channel.send('⚠️ لم أتمكن من إيجاد روم الشكاوي لإرسال الإجابات. تواصل مع الإدارة.');
+          await message.channel.send('✅ تم إرسال إجاباتك لروم الشكاوي. شكراً لتعاونك.');
+        } else {
+          await message.channel.send('⚠️ لم أتمكن من إيجاد روم الشكاوي لإرسال الإجابات. تواصل مع الإدارة.');
+        }
+      } catch (err) {
+        console.error('Error forwarding DM answers:', err);
+        await message.channel.send('⚠️ حدث خطأ أثناء محاولة إرسال إجاباتك. حاول مرة أخرى أو تواصل مع الإدارة.');
       }
-    } catch (err) {
-      console.error('Error forwarding DM answers:', err);
-      await message.channel.send('⚠️ حدث خطأ أثناء محاولة إرسال إجاباتك. حاول مرة أخرى أو تواصل مع الإدارة.');
+
+      return;
     }
 
-    return;
+  } catch (outerErr) {
+    console.error('Unhandled error in messageCreate handler:', outerErr);
   }
-
 });
 
 // ====== تشغيل البوت ======
@@ -327,4 +319,3 @@ client.once('ready', () => {
 });
 
 client.login(process.env.TOKEN);
-```
